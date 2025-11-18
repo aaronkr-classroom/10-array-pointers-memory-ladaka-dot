@@ -1,85 +1,89 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 
-int *BP, *SP;
-int stack[1024];
+// 전역 변수
+int* BP, * SP;//base pointer, stack pointer
+int stack[1024];//4byte*1024 stack
 int stackindex = 0;
 
-void show() {
-    printf("---------------------------------------------------------------\n");
-    printf("현재 스택 상태\n");
-    for (int i = stackindex - 1; i >= 0; i--) {
-        int *addr = (int*)stack[i];
-        int value = *addr;
-        printf("스택[%d]: %p(주소), %d(값)\n", i, (void*)addr, value);
-    }
-    printf("Base Pointer (BP): %p\n", (void*)BP);
-    printf("Stack Pointer (SP): %p\n", (void*)SP);
-    printf("---------------------------------------------------------------\n");
+void Show() {
+	printf("-------------------------------------\n");
+	printf("present stack state(top->bottom)\n");
+	for (int i = stackindex - 1; i >= 0; i--) {
+		//address and realistc address print
+		int* addr = (int*)&stack[i];
+		int value = *addr;
+		printf("stack[%d]:%p(address),%d[value]\n", i, addr, value);
+	}
+	printf("Base Pointer(BP):%p\n", (void*)BP);
+	printf("Stack Pointer(SP):%p\n", (void*)SP);
+	printf("----------------------------\n");
 }
 
 void push(int value) {
-    stack[stackindex++] = value;
-    SP = &stack[stackindex];
+	stack[stackindex++] = value;//stack[0]=value:0++
+	SP = &stack[stackindex];//SP=stack[1]
 }
 
-int pop() {
-    if (stackindex > 0) {
-        SP = &stack[--stackindex];
-        return stack[stackindex];
-    }
-    return -1;
+int* pop() {
+	if (stackindex > 0) {
+		SP = &stack[--stackindex];//1--;stack[0]
+		return stack[stackindex];
+	}
+	return -1;//no value in stack
 }
 
 void Test(int a, int b, int c) {
-    int x = a + b;
-    int y = b + c;
-    int z = c + a;
+	int x = a + b;
+	int y = b + c;
+	int z = c + a;
 
-    printf("Test() 함수 진입 - 스택 프레임 생성\n");
+	printf("Test() 함수 진입 - 스택 프레임 생성\n");
+	push((int)BP);//store previous BP
 
-    push((int)BP);
-    push((int)&x);
-    push((int)&y);
-    push((int)&z);
+	//present stack frame push 
 
-    show();
+	push((int)&x);
+	push((int)&y);
+	push((int)&z);
 
-    printf("Test() 함수 반환 - 스택 프레임 해제\n");
+	Show();
 
-    pop();
-    pop();
-    pop();
+	printf("Test() 함수변환 - 스택 프레임 해제\n");
+	pop(); //z
+	pop();	//y
+	pop();//x
 
-    BP = (int*)pop();
+	BP = (int*)pop();
 
-    show();
+	Show();
 }
 
-int main() {
-    int a = 10;
-    int b = 20;
-    int c = 30;
+int main(void) {
+	int a = 10,
+		b = 20,
+		c = 30;
 
-    printf("Main() 함수 시작 초기 스택 상태\n");
+	printf("main() function start - stack first state\n");
 
-    push((int)&a);
-    push((int)&b);
-    push((int)&c);
+	push((int)&a);
+	push((int)&b);
+	push((int)&c);
 
-    BP = &stack[0];
+	BP = (int*) & stack[0];
 
-    show();
+	Show();
 
-    printf("Test() 함수 호출\n");
-    Test(a, b, c);
+	printf("call Test() function\n");
+	Test(a, b, c);
+	printf("main() function finished repair - stack state\n");
 
-    printf("Main() 함수 종료 - 스택 상태 복구\n");
+	pop();
+	pop();
+	pop();
 
-    pop();
-    pop();
-    pop();
+		Show();
 
-    show();
 
-    return 0;
+
+	return 0;
 }
